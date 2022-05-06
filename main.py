@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 import requests
 
 
@@ -15,17 +17,43 @@ def download_file(url: str, path: str) -> None:
         file.write(response.content)
 
 
-api_url = "https://api.spacexdata.com/v3/launches/67"
+def fetch_spacex_launch():
+    api_url = "https://api.spacexdata.com/v3/launches/65"
 
-payload = {}
-headers = {}
+    payload = {}
+    headers = {}
 
-space_x_answer = requests.request("GET", api_url, headers=headers, data=payload)
+    space_x_answer = requests.request('GET', api_url, headers=headers, data=payload)
+    return space_x_answer.json()['links']['flickr_images']
 
-response_dict = space_x_answer.json()
-images_links_list = response_dict['links']['flickr_images']
 
-for i in images_links_list:
-    download_file(i, 'images')
+def download_spacex_launch_images():
+    for url in fetch_spacex_launch():
+        download_file(url, 'images')
 
-# download_file('https://upload.wikimedia.org/wikipedia/commons/3/3f/HST-SM4.jpeg', 'images')
+
+def fetch_nasa_best_image(count: int = 1) -> list:
+    api_url = "https://api.nasa.gov/planetary/apod"
+
+    headers = {
+        'api_key': nasa_token,
+        'count': count
+    }
+    nasa_answer = requests.request('GET', api_url, params=headers)
+    return nasa_answer.json()
+
+
+def download_nasa_image(count: int = 1):
+    for pic_of_day in fetch_nasa_best_image(count):
+        download_file(pic_of_day['hdurl'], 'images')
+
+
+# def fetch
+if __name__ == '__main__':
+
+    env_path = Path('.') / '.env'
+    load_dotenv(env_path)
+    nasa_token = os.getenv('NASA_API_KEY')
+
+    download_nasa_image(3)
+
