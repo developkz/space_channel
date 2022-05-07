@@ -82,7 +82,7 @@ def download_nasa_natural_image(count: int = 1):
 
 def main():
     bot = telegram.Bot(telegram_token)
-    bot.send_message(text='Добро пожаловать!', chat_id=-1001647039431)
+    bot.sendPhoto(chat_id=-1001647039431, photo=open('images/epic_1b_20220505011358.png', 'rb'))
 
 
 if __name__ == '__main__':
