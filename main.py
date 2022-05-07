@@ -5,9 +5,13 @@ from pprint import pprint
 from datetime import datetime
 
 from urllib.parse import urlparse
+
+import teleport as teleport
 from dotenv import load_dotenv
 
 import requests
+import asyncio
+import telegram
 
 
 def download_file(url: str, path: str) -> None:
@@ -76,10 +80,17 @@ def download_nasa_natural_image(count: int = 1):
         download_file(url, 'images')
 
 
+def main():
+    bot = telegram.Bot(telegram_token)
+    bot.send_message(text='Добро пожаловать!', chat_id=-1001647039431)
+
+
 if __name__ == '__main__':
     env_path = Path('.') / '.env'
     load_dotenv(env_path)
     nasa_token = os.getenv('NASA_API_KEY')
+    telegram_token = os.getenv('TELEGRAM_API_KEY')
     # fetch_nasa_natural_earth(2)
     # download_nasa_image(3)
-    download_nasa_natural_image(4)
+    # download_nasa_natural_image(4)
+    main()
