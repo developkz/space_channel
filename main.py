@@ -91,11 +91,19 @@ async def post_telegram_image(path):
             bot.sendPhoto(photo=open(f'{path}/{file}', 'rb'),
                           chat_id=telegram_channel_id,
                           timeout=150)
-    shutil.rmtree(path)
 
 
 async def sleep_for_time(sleep):
     await asyncio.sleep(sleep)
+
+
+def move_images_to_archive(copy_from, copy_to):
+    source = copy_from
+    destination = copy_to
+    
+    all_files = os.listdir(source)
+    for file in all_files:
+        Path(f'{source}/{file}').rename(f'{destination}/{file}')
 
 
 if __name__ == '__main__':
@@ -109,9 +117,11 @@ if __name__ == '__main__':
     time_sleep = int(os.getenv('TIME_SLEEP'))
     bot = telegram.Bot(telegram_token)
     images_path = Path('images/')
+    archive_path = Path('archive/')
 
     while True:
         download_nasa_image(2)
         download_nasa_natural_image(1)
         asyncio.run(post_telegram_image(images_path))
+        move_images_to_archive(images_path, archive_path)
         asyncio.run(sleep_for_time(time_sleep))
