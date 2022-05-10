@@ -1,16 +1,14 @@
+import asyncio
 import os
-from pathlib import Path
-from pprint import pprint
-
+import shutil
 from datetime import datetime
-
+from pathlib import Path
 from urllib.parse import urlparse
 
-import teleport as teleport
 from dotenv import load_dotenv
 
 import requests
-import asyncio
+
 import telegram
 
 
@@ -32,7 +30,10 @@ def fetch_spacex_launch():
     payload = {}
     headers = {}
 
-    space_x_answer = requests.request('GET', api_url, headers=headers, data=payload)
+    space_x_answer = requests.request('GET',
+                                      api_url,
+                                      headers=headers,
+                                      data=payload)
     return space_x_answer.json()['links']['flickr_images']
 
 
@@ -54,7 +55,7 @@ def fetch_nasa_best_image(count: int = 1) -> list:
 
 def download_nasa_image(count: int = 1):
     for pic_of_day in fetch_nasa_best_image(count):
-        download_file(pic_of_day['hdurl'], 'images')
+        download_file(pic_of_day['hdurl'] or pic_of_day['url'], 'images')
 
 
 def fetch_nasa_natural_earth():
@@ -69,7 +70,11 @@ def fetch_nasa_natural_earth():
         date_of_image = datetime.strptime(item['date'], '%Y-%m-%d  %H:%M:%S')
         image_name = item['image']
         urls_to_images.append(
-            f'https://api.nasa.gov/EPIC/archive/natural/{date_of_image.year}/{"{:02d}".format(date_of_image.month)}/{"{:02d}".format(date_of_image.day)}/png/{image_name}.png?api_key=DEMO_KEY')
+            f'https://api.nasa.gov/EPIC/archive/natural/{date_of_image.year}/'
+            f'{"{:02d}".format(date_of_image.month)}/'
+            f'{"{:02d}".format(date_of_image.day)}'
+            f'/png/{image_name}.png?api_key=DEMO_KEY'
+        )
     return urls_to_images
 
 
@@ -80,17 +85,33 @@ def download_nasa_natural_image(count: int = 1):
         download_file(url, 'images')
 
 
-def main():
-    bot = telegram.Bot(telegram_token)
-    bot.sendPhoto(chat_id=-1001647039431, photo=open('images/epic_1b_20220505011358.png', 'rb'))
+async def post_telegram_image(path):
+    for root, directory, files in os.walk(path):
+        for file in files:
+            bot.sendPhoto(photo=open(f'{path}/{file}', 'rb'),
+                          chat_id=telegram_channel_id,
+                          timeout=150)
+    shutil.rmtree(path)
+
+
+async def sleep_for_time(sleep):
+    await asyncio.sleep(sleep)
 
 
 if __name__ == '__main__':
+
     env_path = Path('.') / '.env'
     load_dotenv(env_path)
+
     nasa_token = os.getenv('NASA_API_KEY')
     telegram_token = os.getenv('TELEGRAM_API_KEY')
-    # fetch_nasa_natural_earth(2)
-    # download_nasa_image(3)
-    # download_nasa_natural_image(4)
-    main()
+    telegram_channel_id = os.getenv('TELEGRAM_CHAT_ID')
+    time_sleep = int(os.getenv('TIME_SLEEP'))
+    bot = telegram.Bot(telegram_token)
+    images_path = Path('images/')
+
+    while True:
+        download_nasa_image(2)
+        download_nasa_natural_image(1)
+        asyncio.run(post_telegram_image(images_path))
+        asyncio.run(sleep_for_time(time_sleep))
