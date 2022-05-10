@@ -1,6 +1,5 @@
 import asyncio
 import os
-import shutil
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
@@ -100,7 +99,6 @@ async def sleep_for_time(sleep):
 def move_images_to_archive(copy_from, copy_to):
     source = copy_from
     destination = copy_to
-    
     all_files = os.listdir(source)
     for file in all_files:
         Path(f'{source}/{file}').rename(f'{destination}/{file}')
@@ -115,24 +113,26 @@ if __name__ == '__main__':
     telegram_token = os.getenv('TELEGRAM_API_KEY')
     telegram_channel_id = os.getenv('TELEGRAM_CHAT_ID')
     time_sleep = int(os.getenv('TIME_SLEEP'))
+    best_images_count = int(os.getenv('NASA_BEST_IMAGES_TO_DOWNLOAD'))
+    natural_images_count = int(os.getenv('NASA_NATURAL_IMAGES_TO_DOWNLOAD'))
     bot = telegram.Bot(telegram_token)
     images_path = Path('images/')
     archive_path = Path('archive/')
-    post_attempts = 1
+    post_attempt = 1
 
     while True:
-        print(f'Attempt {post_attempts}... STARTED!')
+        print(f'Attempt {post_attempt}... STARTED!')
         print(f'Fetching and downloading images to "{images_path}/"')
-        download_nasa_image(2)
-        download_nasa_natural_image(1)
-        print(f'Images downloading... OK!')
-        print(f'Posting images...')
+        download_nasa_image(best_images_count)
+        download_nasa_natural_image(natural_images_count)
+        print('Images downloading... OK!')
+        print('Posting images...')
         asyncio.run(post_telegram_image(images_path))
-        print(f'Images Posting... OK!')
+        print('Images Posting... OK!')
         print(f'Archiving images to {archive_path}')
         asyncio.run(sleep_for_time(2))
         move_images_to_archive(images_path, archive_path)
         print(f'Images moved to archive "{archive_path}/"... OK!')
-        post_attempts += 1
+        post_attempt += 1
         print(f'Started sleep for {time_sleep} seconds...')
         asyncio.run(sleep_for_time(time_sleep))
