@@ -118,10 +118,21 @@ if __name__ == '__main__':
     bot = telegram.Bot(telegram_token)
     images_path = Path('images/')
     archive_path = Path('archive/')
+    post_attempts = 1
 
     while True:
+        print(f'Attempt {post_attempts}... STARTED!')
+        print(f'Fetching and downloading images to "{images_path}/"')
         download_nasa_image(2)
         download_nasa_natural_image(1)
+        print(f'Images downloading... OK!')
+        print(f'Posting images...')
         asyncio.run(post_telegram_image(images_path))
+        print(f'Images Posting... OK!')
+        print(f'Archiving images to {archive_path}')
+        asyncio.run(sleep_for_time(2))
         move_images_to_archive(images_path, archive_path)
+        print(f'Images moved to archive "{archive_path}/"... OK!')
+        post_attempts += 1
+        print(f'Started sleep for {time_sleep} seconds...')
         asyncio.run(sleep_for_time(time_sleep))
