@@ -127,6 +127,7 @@ if __name__ == '__main__':
     time_sleep = int(os.getenv('TIME_SLEEP'))
     best_images_count = int(os.getenv('NASA_BEST_IMAGES_TO_DOWNLOAD'))
     natural_images_count = int(os.getenv('NASA_NATURAL_IMAGES_TO_DOWNLOAD'))
+    spacex_launches_count = int(os.getenv('SPACEX_LAUNCH_IMAGES_TO_DOWNLOAD'))
     bot = telegram.Bot(telegram_token)
     images_path = Path('images/')
     post_attempt = 1
@@ -137,10 +138,10 @@ if __name__ == '__main__':
 
         download_nasa_image(best_images_count)
         download_nasa_natural_image(natural_images_count)
-        download_spacex_launch_images(2)
+        download_spacex_launch_images(spacex_launches_count)
 
         print('Images downloading... OK!')
-        print('Posting images...')
+        print('Images posting...')
 
         asyncio.run(post_telegram_image(images_path))
 
@@ -153,7 +154,7 @@ if __name__ == '__main__':
         asyncio.run(sleep_for_time(2))
         delete_files(images_path)
 
-        print(f'Images deleting... OK!')
+        print(f'Images Deleting... OK!')
 
         post_attempt += 1
 
