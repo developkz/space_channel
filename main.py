@@ -14,14 +14,14 @@ import telegram
 
 def download_file(url: str, path: str) -> None:
     """Скачивает файл из адреса url в указанный путь path."""
-    file_path = urlparse(url).path
-    filename = os.path.basename(file_path)
-    filesystem_path = Path(f'{path}/{filename}')
-    filesystem_path.parent.mkdir(parents=True, exist_ok=True)
+    path_to_file = urlparse(url).path
+    file_name = os.path.basename(path_to_file)
+    path_to_save_images = Path(f'{path}/{file_name}')
+    path_to_save_images.parent.mkdir(parents=True, exist_ok=True)
     response = requests.get(url)
     response.raise_for_status()
 
-    with filesystem_path.open('wb') as file:
+    with path_to_save_images.open('wb') as file:
         file.write(response.content)
 
 
