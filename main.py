@@ -3,6 +3,7 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
+from pprint import pprint
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -25,30 +26,29 @@ def download_file(url: str, path: str) -> None:
         file.write(response.content)
 
 
-def fetch_spacex_launch() -> list:
+def fetch_spacex_launch(launch_number: int = 67) -> list:
     """Возвращает список ссылок на изображения с запуска SpaceX №67."""
-    api_url = "https://api.spacexdata.com/v3/launches/67"
+    api_url = f"https://api.spacexdata.com/v3/launches/{launch_number}"
 
-    payload = {}
-    headers = {}
-
-    space_x_answer = requests.request('GET',
-                                      api_url,
-                                      headers=headers,
-                                      data=payload)
+    space_x_answer = requests.request('GET', api_url)
     return space_x_answer.json()['links']['flickr_images']
 
 
-def download_spacex_launch_images(count: int = 0) -> None:
-    """Загружает count изображений из запуска SpaceX."""
-    downloaded = 0
-    for url in fetch_spacex_launch():
-        if count > downloaded:
-            download_file(url, 'images')
-            downloaded += 1
-        else:
-            break
+def download_spacex_launch_images(count: int = 0, launch_number: int = 0):
+    """Загружает count изображений из запуска launch_number SpaceX."""
+    images_of_launch_urls_list = fetch_spacex_launch(launch_number)
+    if count >= len(images_of_launch_urls_list):
+        return images_of_launch_urls_list[:]
+    else:
+        return images_of_launch_urls_list[0:count]
 
+    # downloaded = 0
+    # for url in fetch_spacex_launch():
+    #     if count > downloaded:
+    #         download_file(url, 'images')
+    #         downloaded += 1
+    #     else:
+    #         break
 
 def fetch_nasa_best_image(count: int = 1) -> list:
     """Получает count ссылок на лучшие изображения дня, NASA 'A Picture Of the Day'."""
@@ -132,32 +132,34 @@ if __name__ == '__main__':
     images_path = Path('images/')
     post_attempt = 1
 
-    while True:
-        print(f'Attempt {post_attempt}... STARTED!')
-        print(f'Fetching and downloading images to "{images_path}/"')
+    pprint(download_spacex_launch_images(2, 56))
 
-        download_nasa_image(best_images_count)
-        download_nasa_natural_image(natural_images_count)
-        download_spacex_launch_images(spacex_launches_count)
-
-        print('Images downloading... OK!')
-        print('Images posting...')
-
-        asyncio.run(post_telegram_image(images_path))
-
-        print('Images Posting... OK!')
-
-        asyncio.run(sleep_for_time(2))
-
-        print(f'Images Deleting...')
-
-        asyncio.run(sleep_for_time(2))
-        delete_files(images_path)
-
-        print(f'Images Deleting... OK!')
-
-        post_attempt += 1
-
-        print(f'Started sleep for {time_sleep} seconds...')
-
-        asyncio.run(sleep_for_time(time_sleep))
+    # while True:
+    #     print(f'Attempt {post_attempt}... STARTED!')
+    #     print(f'Fetching and downloading images to "{images_path}/"')
+    #
+    #     download_nasa_image(best_images_count)
+    #     download_nasa_natural_image(natural_images_count)
+    #     download_spacex_launch_images(spacex_launches_count)
+    #
+    #     print('Images downloading... OK!')
+    #     print('Images posting...')
+    #
+    #     asyncio.run(post_telegram_image(images_path))
+    #
+    #     print('Images Posting... OK!')
+    #
+    #     asyncio.run(sleep_for_time(2))
+    #
+    #     print(f'Images Deleting...')
+    #
+    #     asyncio.run(sleep_for_time(2))
+    #     delete_files(images_path)
+    #
+    #     print(f'Images Deleting... OK!')
+    #
+    #     post_attempt += 1
+    #
+    #     print(f'Started sleep for {time_sleep} seconds...')
+    #
+    #     asyncio.run(sleep_for_time(time_sleep))
