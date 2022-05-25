@@ -46,7 +46,7 @@ def download_spacex_launch_images(count: int = 0, launch_number: int = 0):
             download_file(url, 'images')
 
 
-def fetch_nasa_best_image(count: int = 1) -> list:
+def fetch_nasa_best_image(count: int = 1):
     """Получает count ссылок на лучшие изображения дня, NASA 'A Picture Of the Day'."""
     api_url = "https://api.nasa.gov/planetary/apod"
 
@@ -54,8 +54,12 @@ def fetch_nasa_best_image(count: int = 1) -> list:
         'api_key': nasa_token,
         'count': count
     }
-    nasa_answer = requests.request('GET', api_url, params=headers)
-    return nasa_answer.json()
+    try:
+        nasa_answer = requests.request('GET', api_url, params=headers)
+        nasa_answer.raise_for_status()
+        return nasa_answer.json()
+    except requests.exceptions.HTTPError:
+        return None
 
 
 def download_nasa_image(count: int = 1) -> None:
@@ -128,8 +132,8 @@ if __name__ == '__main__':
     images_path = Path('images/')
     post_attempt = 1
 
-    download_spacex_launch_images(23, 56)
-
+    # download_spacex_launch_images(23, 56)
+    pprint(fetch_nasa_best_image())
     # while True:
     #     print(f'Attempt {post_attempt}... STARTED!')
     #     print(f'Fetching and downloading images to "{images_path}/"')
