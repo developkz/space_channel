@@ -31,6 +31,7 @@ def fetch_spacex_launch(launch_number: int = 67) -> list:
     api_url = f"https://api.spacexdata.com/v3/launches/{launch_number}"
 
     space_x_answer = requests.request('GET', api_url)
+    space_x_answer.raise_for_status()
     return space_x_answer.json()['links']['flickr_images']
 
 
@@ -38,17 +39,12 @@ def download_spacex_launch_images(count: int = 0, launch_number: int = 0):
     """Загружает count изображений из запуска launch_number SpaceX."""
     images_of_launch_urls_list = fetch_spacex_launch(launch_number)
     if count >= len(images_of_launch_urls_list):
-        return images_of_launch_urls_list[:]
+        for url in images_of_launch_urls_list:
+            download_file(url, 'images')
     else:
-        return images_of_launch_urls_list[0:count]
+        for url in images_of_launch_urls_list[:count]:
+            download_file(url, 'images')
 
-    # downloaded = 0
-    # for url in fetch_spacex_launch():
-    #     if count > downloaded:
-    #         download_file(url, 'images')
-    #         downloaded += 1
-    #     else:
-    #         break
 
 def fetch_nasa_best_image(count: int = 1) -> list:
     """Получает count ссылок на лучшие изображения дня, NASA 'A Picture Of the Day'."""
@@ -132,7 +128,7 @@ if __name__ == '__main__':
     images_path = Path('images/')
     post_attempt = 1
 
-    pprint(download_spacex_launch_images(2, 56))
+    download_spacex_launch_images(23, 56)
 
     # while True:
     #     print(f'Attempt {post_attempt}... STARTED!')
