@@ -41,6 +41,7 @@ TELEGRAM_CHAT_ID=<Paste chat id here>
 NASA_BEST_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из NASA Best Images
 NASA_NATURAL_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из NASA Natural Earth
 SPACEX_LAUNCH_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из запуска Spacex
+NASA_DEMO_API_KEY='DEMO_KEY'
 
 TIME_SLEEP=86400  #day 86400-seconds
 ```
@@ -53,7 +54,7 @@ TIME_SLEEP=86400  #day 86400-seconds
 Attempt 1... STARTED!
 Fetching and downloading images to "images/"
 Images downloading... OK!
-Posting images...
+Images posting...
 Images Posting... OK!
 Images Deleting...
 Images Deleting... OK!
