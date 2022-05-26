@@ -37,11 +37,11 @@ python3 -m pip install requirements.txt
 NASA_API_KEY=<Paste your token here>
 TELEGRAM_API_KEY=<Paste your token here>
 TELEGRAM_CHAT_ID=<Paste chat id here>
+NASA_DEMO_API_KEY='DEMO_KEY'
 
 NASA_BEST_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из NASA Best Images
 NASA_NATURAL_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из NASA Natural Earth
 SPACEX_LAUNCH_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из запуска Spacex
-NASA_DEMO_API_KEY='DEMO_KEY'
 
 TIME_SLEEP=86400  #day 86400-seconds
 ```
