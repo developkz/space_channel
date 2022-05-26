@@ -1,9 +1,9 @@
 import asyncio
 import os
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
-from pprint import pprint
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -35,7 +35,8 @@ def fetch_spacex_launch(launch_number: int = 67) -> list:
     return space_x_answer.json()['links']['flickr_images']
 
 
-def download_spacex_launch_images(count: int = 0, launch_number: int = 67):
+def download_spacex_launch_images(count: int = 0,
+                                  launch_number: int = 67):
     """Загружает count изображений из запуска launch_number SpaceX."""
     images_of_launch_urls_list = fetch_spacex_launch(launch_number)
     if count >= len(images_of_launch_urls_list):
@@ -47,7 +48,8 @@ def download_spacex_launch_images(count: int = 0, launch_number: int = 67):
 
 
 def fetch_nasa_best_image(token: str, count: int = 1):
-    """Получает count ссылок на лучшие изображения дня, NASA 'A Picture Of the Day'."""
+    """Получает count ссылок на лучшие изображения дня,
+    NASA 'A Picture Of the Day'."""
     api_url = "https://api.nasa.gov/planetary/apod"
 
     headers = {
@@ -76,29 +78,43 @@ def fetch_nasa_natural_earth(token: str) -> list:
         'api_key': token,
     }
     nasa_answer = requests.request('GET', api_url, params=headers)
+    nasa_answer.raise_for_status()
     urls_to_images = []
     for item in nasa_answer.json():
         date_of_image = datetime.strptime(item['date'], '%Y-%m-%d  %H:%M:%S')
         image_name = item['image']
         urls_to_images.append(
-            f'https://api.nasa.gov/EPIC/archive/natural/{date_of_image.year}/'
+            f'https://api.nasa.gov/EPIC/archive/natural/'
+            f'{date_of_image.year}/'
             f'{"{:02d}".format(date_of_image.month)}/'
             f'{"{:02d}".format(date_of_image.day)}'
-            f'/png/{image_name}.png?api_key=DEMO_KEY'
+            f'/png/{image_name}.png'
         )
     return urls_to_images
 
 
-def download_nasa_natural_image(token: str, count: int = 1):
-    """Загружает count ссылок из списка fetch_nasa_natural_earth() ссылок."""
-    urls_list = fetch_nasa_natural_earth(token)
-    # pprint(urls_list)
-    for url in urls_list[:count]:
-        download_file(url, 'images')
+def download_nasa_natural_image(path_to_save,
+                                api_key: str,
+                                token: str,
+                                count: int = 1):
+    """Загружает count ссылок из списка
+    fetch_nasa_natural_earth() ссылок."""
+    urls = fetch_nasa_natural_earth(token)
+    os.makedirs(os.path.dirname(f'{path_to_save}/'), exist_ok=True)
+    for url in urls[:count]:
+        file_name = os.path.basename(url)
+        params = {
+            'api_key': api_key
+        }
+        image = requests.get(url, params=params)
+        if image.status_code == 200:
+            open(file_name, 'wb').write(image.content)
+            os.rename(file_name, f'{path_to_save}/{file_name}')
 
 
-async def post_telegram_image(path: str) -> None:
-    """Публикует изображения из директории в канал телеграм через телеграм бота."""
+def post_telegram_image(path: Path) -> None:
+    """Публикует изображения из директории в
+    канал телеграм через телеграм бота."""
     for root, directory, files in os.walk(path):
         for file in files:
             bot.sendPhoto(photo=open(f'{path}/{file}', 'rb'),
@@ -106,12 +122,12 @@ async def post_telegram_image(path: str) -> None:
                           timeout=150)
 
 
-async def sleep_for_time(sleep: int) -> None:
+def sleep_for_time(sleep: int) -> None:
     """Sleep Time"""
-    await asyncio.sleep(sleep)
+    time.sleep(sleep)
 
 
-def delete_files(source: str) -> None:
+def delete_files(source: Path) -> None:
     """Удаляет директорию Path(source)"""
     shutil.rmtree(source)
 
@@ -122,6 +138,7 @@ if __name__ == '__main__':
     load_dotenv(env_path)
 
     nasa_token = os.getenv('NASA_API_KEY')
+    nasa_api_key = os.getenv('NASA_DEMO_API_KEY')
     telegram_token = os.getenv('TELEGRAM_API_KEY')
     telegram_channel_id = os.getenv('TELEGRAM_CHAT_ID')
     time_sleep = int(os.getenv('TIME_SLEEP'))
@@ -132,28 +149,26 @@ if __name__ == '__main__':
     images_path = Path('images/')
     post_attempt = 1
 
-    # download_spacex_launch_images(23, 56)
-    # pprint(fetch_nasa_best_image())
     while True:
         print(f'Attempt {post_attempt}... STARTED!')
         print(f'Fetching and downloading images to "{images_path}/"')
 
         download_nasa_image(nasa_token, best_images_count)
-        download_nasa_natural_image(nasa_token, natural_images_count)
-        download_spacex_launch_images(spacex_launches_count, 66)
+        download_nasa_natural_image(images_path, nasa_api_key, nasa_token)
+        download_spacex_launch_images(spacex_launches_count)
 
         print('Images downloading... OK!')
         print('Images posting...')
 
-        asyncio.run(post_telegram_image(images_path))
+        post_telegram_image(images_path)
 
         print('Images Posting... OK!')
 
-        asyncio.run(sleep_for_time(2))
+        sleep_for_time(2)
 
         print(f'Images Deleting...')
 
-        asyncio.run(sleep_for_time(2))
+        sleep_for_time(2)
         delete_files(images_path)
 
         print(f'Images Deleting... OK!')
@@ -162,4 +177,4 @@ if __name__ == '__main__':
 
         print(f'Started sleep for {time_sleep} seconds...')
 
-        asyncio.run(sleep_for_time(time_sleep))
+        sleep_for_time(time_sleep)
