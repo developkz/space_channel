@@ -13,21 +13,16 @@ python3 -m venv env  #создание окружения
 source env/bin/activate  #активация виртуального окружения
 ```
 
-Для того чтобы установить необходимые модули запустите команду:
+## Настройка токенов доступа и установка модулей
+
+Установите все необходимые модули.
 
 ```shell
 pip install -r requirements.txt
 ```
 
-## Настройка токенов доступа
-
 Переименуйте `.env.sample` в `.env`
 
-Установите все необходимые модули.
-
-```shell
-python3 -m pip install requirements.txt
-```
 
 Для получения NASA_API_KEY перейдите по ссылке [Nasa Generate API](https://api.nasa.gov/) и следуйте инструкциям.
 Для регистрации бота и получения токена воспользуйтесь ссылкой [Telegram Botfather Guide](https://sendpulse.com/knowledge-base/chatbot/create-telegram-chatbot)
@@ -44,6 +39,13 @@ NASA_NATURAL_IMAGES_TO_DOWNLOAD=1  #количество загружаемых 
 SPACEX_LAUNCH_IMAGES_TO_DOWNLOAD=1  #количество загружаемых изображений из запуска Spacex
 
 TIME_SLEEP=86400  #day 86400-seconds
+```
+## Запуск скрипта
+
+Для того чтобы запустить скрипт, войдите в директорию со скриптом и запустите команду:
+
+```shell
+python main.py
 ```
 
 После успешного запуска и постинга картинок они автоматически удалятся из папки images.

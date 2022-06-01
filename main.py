@@ -1,4 +1,3 @@
-import asyncio
 import os
 import shutil
 import time
@@ -26,25 +25,13 @@ def download_file(url: str, path: str) -> None:
         file.write(response.content)
 
 
-def fetch_spacex_launch(launch_number: int = 67) -> list:
+def fetch_spacex_launch(launch_number: int = 67):
     """Возвращает список ссылок на изображения с запуска SpaceX №67."""
     api_url = f"https://api.spacexdata.com/v3/launches/{launch_number}"
 
     space_x_answer = requests.request('GET', api_url)
     space_x_answer.raise_for_status()
-    return space_x_answer.json()['links']['flickr_images']
-
-
-def download_spacex_launch_images(count: int = 0,
-                                  launch_number: int = 67):
-    """Загружает count изображений из запуска launch_number SpaceX."""
-    images_of_launch_urls_list = fetch_spacex_launch(launch_number)
-    if count >= len(images_of_launch_urls_list):
-        for url in images_of_launch_urls_list:
-            download_file(url, 'images')
-    else:
-        for url in images_of_launch_urls_list[:count]:
-            download_file(url, 'images')
+    return space_x_answer.json()
 
 
 def fetch_nasa_best_image(token: str, count: int = 1):
@@ -64,12 +51,6 @@ def fetch_nasa_best_image(token: str, count: int = 1):
         return None
 
 
-def download_nasa_image(token: str, count: int = 1) -> None:
-    """Загружает count изображения из NASA 'A Picture Of the Day'."""
-    for pic_of_day in fetch_nasa_best_image(token, count):
-        download_file(pic_of_day['hdurl'] or pic_of_day['url'], 'images')
-
-
 def fetch_nasa_natural_earth(token: str) -> list:
     """Возвращает ссылки на изображения Natural Earth NASA."""
     api_url = 'https://api.nasa.gov/EPIC/api/natural/'
@@ -81,16 +62,17 @@ def fetch_nasa_natural_earth(token: str) -> list:
     nasa_answer.raise_for_status()
     urls_to_images = []
     for item in nasa_answer.json():
-        date_of_image = datetime.strptime(item['date'], '%Y-%m-%d  %H:%M:%S')
+        parsed_date = datetime.strptime(item['date'], '%Y-%m-%d  %H:%M:%S')
+        date = f'{parsed_date.year}/{"{:02d}".format(parsed_date.month)}/{"{:02d}".format(parsed_date.day)}'
         image_name = item['image']
-        urls_to_images.append(
-            f'https://api.nasa.gov/EPIC/archive/natural/'
-            f'{date_of_image.year}/'
-            f'{"{:02d}".format(date_of_image.month)}/'
-            f'{"{:02d}".format(date_of_image.day)}'
-            f'/png/{image_name}.png'
-        )
+        urls_to_images.append(f'https://api.nasa.gov/EPIC/archive/natural/{date}/png/{image_name}.png')
     return urls_to_images
+
+
+def download_nasa_image(token: str, count: int = 1) -> None:
+    """Загружает count изображения из NASA 'A Picture Of the Day'."""
+    for pic_of_day in fetch_nasa_best_image(token, count):
+        download_file(pic_of_day['hdurl'] or pic_of_day['url'], 'images')
 
 
 def download_nasa_natural_image(path_to_save,
@@ -112,6 +94,18 @@ def download_nasa_natural_image(path_to_save,
             os.rename(file_name, f'{path_to_save}/{file_name}')
 
 
+def download_spacex_launch_images(count: int = 0,
+                                  launch_number: int = 67):
+    """Загружает count изображений из запуска launch_number SpaceX."""
+    images_of_launch_urls_list = fetch_spacex_launch(launch_number)['links']['flickr_images']
+    if count >= len(images_of_launch_urls_list):
+        for url in images_of_launch_urls_list:
+            download_file(url, 'images')
+    else:
+        for url in images_of_launch_urls_list[:count]:
+            download_file(url, 'images')
+
+
 def post_telegram_image(path: Path) -> None:
     """Публикует изображения из директории в
     канал телеграм через телеграм бота."""
@@ -120,16 +114,6 @@ def post_telegram_image(path: Path) -> None:
             bot.sendPhoto(photo=open(f'{path}/{file}', 'rb'),
                           chat_id=telegram_channel_id,
                           timeout=150)
-
-
-def sleep_for_time(sleep: int) -> None:
-    """Sleep Time"""
-    time.sleep(sleep)
-
-
-def delete_files(source: Path) -> None:
-    """Удаляет директорию Path(source)"""
-    shutil.rmtree(source)
 
 
 if __name__ == '__main__':
@@ -150,6 +134,7 @@ if __name__ == '__main__':
     post_attempt = 1
 
     while True:
+
         print(f'Attempt {post_attempt}... STARTED!')
         print(f'Fetching and downloading images to "{images_path}/"')
 
@@ -164,12 +149,12 @@ if __name__ == '__main__':
 
         print('Images Posting... OK!')
 
-        sleep_for_time(2)
+        time.sleep(2)
 
         print(f'Images Deleting...')
 
-        sleep_for_time(2)
-        delete_files(images_path)
+        time.sleep(2)
+        shutil.rmtree(images_path)
 
         print(f'Images Deleting... OK!')
 
@@ -177,4 +162,4 @@ if __name__ == '__main__':
 
         print(f'Started sleep for {time_sleep} seconds...')
 
-        sleep_for_time(time_sleep)
+        time.sleep(time_sleep)
